@@ -1,0 +1,16 @@
+{
+  "initial_weights": "yolo11n-cls.pt",
+  "dataset": "C:\\Users\\Gursimran Singh\\Desktop\\Uzma\\Concrete Project\\dataset",
+  "epochs_requested": 20,
+  "epochs_completed": 20,
+  "batch": 24,
+  "imgsz": 224,
+  "seed": 42,
+  "device": "0",
+  "gpu": "NVIDIA GeForce RTX 4070 Laptop GPU",
+  "run_dir": "C:\\Users\\Gursimran Singh\\Desktop\\Uzma\\Concrete Project\\runs\\wall_yolo11n",
+  "training_seconds": 631.123027499998,
+  "preprocessing": "Resize entire RGB patch to 224x224; float [0,1]",
+  "augmentation": "Horizontal/vertical flips, mild brightness/contrast/saturation/hue jitter",
+  "selection": "Best validation top-1 checkpoint; threshold tuned on validation F2"
+}

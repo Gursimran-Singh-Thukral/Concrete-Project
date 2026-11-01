@@ -1,0 +1,37 @@
+{
+  "purpose": "Inference software smoke test, not localization validation or underwater footage",
+  "tiles": [
+    {
+      "source": "C:\\Users\\Gursimran Singh\\Desktop\\Uzma\\Concrete Project\\DATA_Maguire_20180517_ALL\\DATA_Maguire_20180517_ALL\\SDNET2018\\W\\CW\\7069-101.jpg",
+      "label": "crack",
+      "group": "W:7069",
+      "sha256": "5b1186f26a1f6d7d12270cc4f80e04de429c91b458533d552d70adee6b22fac2",
+      "split": "test",
+      "prepared": "C:\\Users\\Gursimran Singh\\Desktop\\Uzma\\Concrete Project\\dataset\\test\\crack\\W_7069-101.jpg"
+    },
+    {
+      "source": "C:\\Users\\Gursimran Singh\\Desktop\\Uzma\\Concrete Project\\DATA_Maguire_20180517_ALL\\DATA_Maguire_20180517_ALL\\SDNET2018\\W\\UW\\7069-1.jpg",
+      "label": "no_crack",
+      "group": "W:7069",
+      "sha256": "280c2670e1b269591d65b47e89e188908b58464968b8aeb1ed52e2fd913120a9",
+      "split": "test",
+      "prepared": "C:\\Users\\Gursimran Singh\\Desktop\\Uzma\\Concrete Project\\dataset\\test\\no_crack\\W_7069-1.jpg"
+    },
+    {
+      "source": "C:\\Users\\Gursimran Singh\\Desktop\\Uzma\\Concrete Project\\DATA_Maguire_20180517_ALL\\DATA_Maguire_20180517_ALL\\SDNET2018\\W\\CW\\7069-104.jpg",
+      "label": "crack",
+      "group": "W:7069",
+      "sha256": "87ee05bf5644671cf71c8d9038d203af9766bea14d862aa83ddcd25e6ae117d5",
+      "split": "test",
+      "prepared": "C:\\Users\\Gursimran Singh\\Desktop\\Uzma\\Concrete Project\\dataset\\test\\crack\\W_7069-104.jpg"
+    },
+    {
+      "source": "C:\\Users\\Gursimran Singh\\Desktop\\Uzma\\Concrete Project\\DATA_Maguire_20180517_ALL\\DATA_Maguire_20180517_ALL\\SDNET2018\\W\\UW\\7069-10.jpg",
+      "label": "no_crack",
+      "group": "W:7069",
+      "sha256": "d0ca5be3a970b5ac0f608fe8294ce5063c85c5416968788f07f271065fb5bdb7",
+      "split": "test",
+      "prepared": "C:\\Users\\Gursimran Singh\\Desktop\\Uzma\\Concrete Project\\dataset\\test\\no_crack\\W_7069-10.jpg"
+    }
+  ]
+}

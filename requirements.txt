@@ -1,0 +1,5 @@
+ultralytics>=8.3,<9
+scikit-learn>=1.7,<2
+opencv-python>=4.11,<6
+Pillow>=11
+# Install CUDA-enabled torch and torchvision first; see README.md.

@@ -1,0 +1,10 @@
+.venv/
+.tmp/
+__pycache__/
+dataset/
+DATA_Maguire_20180517_ALL/
+runs/
+models/*.pt
+yolo11n-cls.pt
+*.cache
+.yolo/

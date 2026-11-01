@@ -1,0 +1,19 @@
+{
+  "threshold": 0.217380091547966,
+  "patch": 256,
+  "stride": 128,
+  "tiles": 9,
+  "boxes": [
+    {
+      "x": 0,
+      "y": 0,
+      "width": 384,
+      "height": 512,
+      "mean_patch_score": 0.7694952487945557
+    }
+  ],
+  "interpretation": "Coarse patch candidates, not crack geometry or physical crack count",
+  "processing_seconds": 0.9086392000026535,
+  "source": "C:\\Users\\Gursimran Singh\\Desktop\\Uzma\\Concrete Project\\outputs\\heldout_mosaic.jpg",
+  "weights": "C:\\Users\\Gursimran Singh\\Desktop\\Uzma\\Concrete Project\\models\\best.pt"
+}

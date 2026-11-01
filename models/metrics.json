@@ -1,0 +1,121 @@
+{
+  "weights": "C:\\Users\\Gursimran Singh\\Desktop\\Uzma\\Concrete Project\\models\\best.pt",
+  "weights_sha256": "99aacc0c6fcfbdcdfffa7831f312cde88b4bdbf3d2a283ac797403e036cf1602",
+  "dataset_manifest_sha256": "8276465cc45eae46c33e64de0b6e709e46a8184665342aa1a7756fbf3fe3aa82",
+  "positive_class": "crack",
+  "threshold_selection": "Maximum validation F2 (recall-weighted), before test evaluation",
+  "scope": "Dry SDNET2018 photographs; not validated underwater or for dam safety",
+  "splits": {
+    "val": {
+      "at_default_threshold": {
+        "threshold": 0.5,
+        "accuracy": 0.9397329483940816,
+        "precision": 0.9285714285714286,
+        "recall": 0.7751277683134583,
+        "f1": 0.8449396471680595,
+        "f2": 0.8016208597603947,
+        "confusion_matrix": [
+          [
+            2149,
+            35
+          ],
+          [
+            132,
+            455
+          ]
+        ],
+        "confusion_matrix_labels": [
+          "no_crack",
+          "crack"
+        ],
+        "average_precision": 0.9073497203653903,
+        "roc_auc": 0.947400484240348,
+        "samples": 2771
+      },
+      "at_selected_threshold": {
+        "threshold": 0.217380091547966,
+        "accuracy": 0.9213280404186215,
+        "precision": 0.7990275526742301,
+        "recall": 0.8398637137989778,
+        "f1": 0.8189368770764119,
+        "f2": 0.8313659359190556,
+        "confusion_matrix": [
+          [
+            2060,
+            124
+          ],
+          [
+            94,
+            493
+          ]
+        ],
+        "confusion_matrix_labels": [
+          "no_crack",
+          "crack"
+        ],
+        "average_precision": 0.9073497203653903,
+        "roc_auc": 0.947400484240348,
+        "samples": 2771
+      },
+      "source_photographs": 11,
+      "inference_ms_per_patch": 9.638155142554258,
+      "inference_timing": "Batch throughput including resize and prediction, excluding file decode; warmup excluded"
+    },
+    "test": {
+      "at_default_threshold": {
+        "threshold": 0.5,
+        "accuracy": 0.926046176046176,
+        "precision": 0.9008264462809917,
+        "recall": 0.7352445193929174,
+        "f1": 0.8096564531104921,
+        "f2": 0.7633053221288515,
+        "confusion_matrix": [
+          [
+            2131,
+            48
+          ],
+          [
+            157,
+            436
+          ]
+        ],
+        "confusion_matrix_labels": [
+          "no_crack",
+          "crack"
+        ],
+        "average_precision": 0.8900758425219005,
+        "roc_auc": 0.9443693325914158,
+        "samples": 2772
+      },
+      "at_selected_threshold": {
+        "threshold": 0.217380091547966,
+        "accuracy": 0.9116161616161617,
+        "precision": 0.7761904761904762,
+        "recall": 0.8246205733558178,
+        "f1": 0.7996729354047425,
+        "f2": 0.8144570286475683,
+        "confusion_matrix": [
+          [
+            2038,
+            141
+          ],
+          [
+            104,
+            489
+          ]
+        ],
+        "confusion_matrix_labels": [
+          "no_crack",
+          "crack"
+        ],
+        "average_precision": 0.8900758425219005,
+        "roc_auc": 0.9443693325914158,
+        "samples": 2772
+      },
+      "source_photographs": 11,
+      "inference_ms_per_patch": 9.32969837665355,
+      "inference_timing": "Batch throughput including resize and prediction, excluding file decode; warmup excluded"
+    }
+  },
+  "selected_threshold": 0.217380091547966
+}
