@@ -10,6 +10,7 @@ from pathlib import Path
 import random
 import re
 import shutil
+import threading
 import time
 
 ROOT = Path(__file__).resolve().parent
@@ -365,6 +366,53 @@ def selected_threshold(args):
     return report["selected_threshold"]
 
 
+def draw_candidates(annotated, boxes):
+    import cv2
+    for box in boxes:
+        x, y, w, h = box["x"], box["y"], box["width"], box["height"]
+        cv2.rectangle(annotated, (x, y), (x+w-1, y+h-1), (0, 180, 255), 2)
+        cv2.putText(annotated, f"Candidate {box['mean_patch_score']:.2f}", (x, max(18, y-5)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 180, 255), 1)
+    cv2.putText(annotated, "Approximate crack candidates", (8, annotated.shape[0]-12), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 180, 255), 1)
+
+
+class DetectionWorker:
+    """Runs candidate_regions on the newest submitted frame in a background thread."""
+
+    def __init__(self, model, args, threshold):
+        self.model, self.args, self.threshold = model, args, threshold
+        self.lock = threading.Lock()
+        self.pending, self.result, self.count = None, None, 0
+        self.stopped = threading.Event()
+        self.thread = threading.Thread(target=self.run, daemon=True)
+        self.thread.start()
+
+    def submit(self, frame):
+        with self.lock:
+            self.pending = frame
+
+    def latest(self):
+        with self.lock:
+            return self.count, self.result
+
+    def run(self):
+        while not self.stopped.is_set():
+            with self.lock:
+                frame, self.pending = self.pending, None
+            if frame is None:
+                time.sleep(0.005)
+                continue
+            tick = time.perf_counter()
+            _, _, metadata = candidate_regions(frame, self.model, self.args, self.threshold)
+            metadata.update(processing_seconds=time.perf_counter() - tick,
+                            frame_width=frame.shape[1], frame_height=frame.shape[0])
+            with self.lock:
+                self.result, self.count = metadata, self.count + 1
+
+    def stop(self):
+        self.stopped.set()
+        self.thread.join()
+
+
 def candidate_regions(frame, model, args, threshold):
     import cv2
     import numpy as np
@@ -391,9 +439,7 @@ def candidate_regions(frame, model, args, threshold):
             continue
         confidence = float(heat[labels == label].mean())
         boxes.append({"x": x, "y": y, "width": w, "height": h, "mean_patch_score": confidence})
-        cv2.rectangle(annotated, (x, y), (x+w-1, y+h-1), (0, 180, 255), 2)
-        cv2.putText(annotated, f"Candidate {confidence:.2f}", (x, max(18, y-5)), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 180, 255), 1)
-    cv2.putText(annotated, "Approximate crack candidates", (8, height-12), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 180, 255), 1)
+    draw_candidates(annotated, boxes)
     return annotated, heat, {"threshold": threshold, "patch": patch, "stride": stride,
                              "tiles": len(coords), "boxes": boxes,
                              "interpretation": "Coarse patch candidates, not crack geometry or physical crack count"}
@@ -462,6 +508,7 @@ def live_command(args):
         if not capture.isOpened():
             raise ValueError(f"Cannot open camera/video: {args.source}")
     writer, frame_index = None, 0
+    worker, logged = DetectionWorker(model, args, threshold) if args.smooth else None, 0
     log = None
     if args.output:
         Path(args.output).parent.mkdir(parents=True, exist_ok=True)
@@ -474,13 +521,25 @@ def live_command(args):
             if args.max_width and frame.shape[1] > args.max_width:
                 scale = args.max_width / frame.shape[1]
                 frame = cv2.resize(frame, (args.max_width, round(frame.shape[0] * scale)))
-            tick = time.perf_counter()
-            annotated, _, metadata = candidate_regions(frame, model, args, threshold)
-            metadata.update(frame=frame_index, processing_seconds=time.perf_counter() - tick,
-                            video_time_ms=capture.get(cv2.CAP_PROP_POS_MSEC),
-                            frame_width=frame.shape[1], frame_height=frame.shape[0])
-            if log:
-                log.write(json.dumps(metadata) + "\n")
+            if worker:
+                worker.submit(frame)
+                detections, metadata = worker.latest()
+                annotated = frame.copy()
+                if metadata:
+                    draw_candidates(annotated, metadata["boxes"])
+                if metadata and detections != logged:
+                    logged = detections
+                    metadata = dict(metadata, frame=frame_index, video_time_ms=capture.get(cv2.CAP_PROP_POS_MSEC))
+                    if log:
+                        log.write(json.dumps(metadata) + "\n")
+            else:
+                tick = time.perf_counter()
+                annotated, _, metadata = candidate_regions(frame, model, args, threshold)
+                metadata.update(frame=frame_index, processing_seconds=time.perf_counter() - tick,
+                                video_time_ms=capture.get(cv2.CAP_PROP_POS_MSEC),
+                                frame_width=frame.shape[1], frame_height=frame.shape[0])
+                if log:
+                    log.write(json.dumps(metadata) + "\n")
             if args.output:
                 if writer is None:
                     fps = capture.get(cv2.CAP_PROP_FPS)
@@ -498,6 +557,8 @@ def live_command(args):
             if args.max_frames and frame_index >= args.max_frames:
                 break
     finally:
+        if worker:
+            worker.stop()
         capture.release()
         if writer:
             writer.release()
@@ -540,6 +601,8 @@ def main():
         if command == "live":
             p.add_argument("--max-width", type=int, default=640)
             p.add_argument("--no-display", action="store_true")
+            p.add_argument("--smooth", action="store_true",
+                           help="Detect in a background thread so the video stays fluid; boxes update when ready")
             p.add_argument("--max-frames", type=int, default=0)
         p.set_defaults(func={"train": train, "evaluate": evaluate, "image": image_command, "live": live_command}[command])
     args = parser.parse_args()
