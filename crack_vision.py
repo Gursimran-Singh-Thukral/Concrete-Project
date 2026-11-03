@@ -422,14 +422,45 @@ def image_command(args):
     print(json.dumps(metadata, indent=2))
 
 
+class PiCameraCapture:
+    """Minimal cv2.VideoCapture look-alike for the Raspberry Pi Camera Module."""
+
+    def __init__(self, size=(1280, 720)):
+        from picamera2 import Picamera2
+        self.camera = Picamera2()
+        # "RGB888" yields BGR-ordered arrays, which is what OpenCV expects.
+        self.camera.configure(self.camera.create_video_configuration(main={"size": size, "format": "RGB888"}))
+        self.camera.start()
+        self.started = time.perf_counter()
+
+    def isOpened(self):
+        return True
+
+    def read(self):
+        return True, self.camera.capture_array()
+
+    def get(self, prop):
+        import cv2
+        if prop == cv2.CAP_PROP_POS_MSEC:
+            return (time.perf_counter() - self.started) * 1000
+        return 0
+
+    def release(self):
+        self.camera.stop()
+        self.camera.close()
+
+
 def live_command(args):
     import cv2
     model = load_model(args.weights)
     threshold = selected_threshold(args)
-    source = int(args.source) if args.source.isdecimal() else args.source
-    capture = cv2.VideoCapture(source)
-    if not capture.isOpened():
-        raise ValueError(f"Cannot open camera/video: {args.source}")
+    if args.source == "picamera":
+        capture = PiCameraCapture()
+    else:
+        source = int(args.source) if args.source.isdecimal() else args.source
+        capture = cv2.VideoCapture(source)
+        if not capture.isOpened():
+            raise ValueError(f"Cannot open camera/video: {args.source}")
     writer, frame_index = None, 0
     log = None
     if args.output:
