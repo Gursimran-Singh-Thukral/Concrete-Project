@@ -510,6 +510,11 @@ def live_command(args):
         if not capture.isOpened():
             raise ValueError(f"Cannot open camera/video: {args.source}")
     writer, frame_index = None, 0
+    streamer = None
+    if args.stream:
+        from stream_server import MjpegServer
+        streamer = MjpegServer(args.stream)
+        print(f"Live view: http://<pi-address>:{args.stream}/")
     sensor = None
     if args.ultrasonic:
         from depth_sensor import UltrasonicSensor
@@ -564,6 +569,8 @@ def live_command(args):
                         raise OSError("Cannot open output video writer.")
                 writer.write(annotated)
             frame_index += 1
+            if streamer:
+                streamer.update(annotated)
             if not args.no_display:
                 cv2.imshow("Dam inspection - crack candidates (Q to exit)", annotated)
                 if cv2.waitKey(1) & 0xFF in (ord("q"), 27):
@@ -575,6 +582,8 @@ def live_command(args):
             worker.stop()
         if sensor:
             sensor.close()
+        if streamer:
+            streamer.close()
         capture.release()
         if writer:
             writer.release()
@@ -617,6 +626,8 @@ def main():
         if command == "live":
             p.add_argument("--max-width", type=int, default=640)
             p.add_argument("--no-display", action="store_true")
+            p.add_argument("--stream", type=int, default=0, metavar="PORT",
+                           help="Serve the annotated video as a web page on this port, e.g. 8000, for viewing without a monitor")
             p.add_argument("--ultrasonic", action="store_true",
                            help="Read wall distance from a trigger/echo ultrasonic sensor and add it to the overlay and log")
             p.add_argument("--trig", type=int, default=23, help="BCM GPIO number wired to the sensor TRIG pin")

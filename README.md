@@ -173,6 +173,22 @@ Millimetre sizes assume the camera faces the wall squarely and `--hfov` is the
 camera's horizontal field of view in the medium. Pass `--sound-speed 1480` for
 a sensor operating in fresh water.
 
+### Headless operation (no monitor)
+
+Add `--no-display --stream 8000` and open `http://<pi-address>:8000/` in a
+browser on any computer on the same network. To start at boot, edit
+`deploy/crack-vision.service` (user and paths), then on the Pi:
+
+```bash
+sudo cp deploy/crack-vision.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now crack-vision
+journalctl -u crack-vision -f      # live log; use systemctl stop crack-vision to stop
+```
+
+Each run saves `outputs/run_<date>.mp4` and a matching `.jsonl` log. The stream
+has no password, so use it only on a trusted network or tether.
+
 ## Underwater validation required next
 
 Collect cracked and uncracked specimens in freshwater with the actual camera.

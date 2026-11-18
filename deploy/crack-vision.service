@@ -1,0 +1,17 @@
+# Starts crack detection at boot with no monitor. Edit YOURUSER and the paths first.
+# Install: see "Headless operation" in README.md.
+[Unit]
+Description=Crack vision live inspection
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=YOURUSER
+WorkingDirectory=/home/YOURUSER/Concrete-Project
+ExecStartPre=/bin/mkdir -p outputs
+ExecStart=/bin/bash -c 'exec /home/YOURUSER/Concrete-Project/venv/bin/python crack_vision.py live --source picamera --smooth --ultrasonic --no-display --stream 8000 --output outputs/run_$(date +%%Y%%m%%d_%%H%%M%%S).mp4'
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
