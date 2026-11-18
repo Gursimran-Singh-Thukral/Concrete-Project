@@ -145,6 +145,34 @@ checkpoint. `--threshold 0.5` supplies a manual override. `--device cpu` forces
 CPU inference. The live loop processes every captured frame sequentially;
 real-time feasibility must be measured with the intended camera.
 
+## Raspberry Pi with camera and ultrasonic sensor
+
+On Raspberry Pi OS (64-bit), install the system packages first and create the
+environment with access to them:
+
+```bash
+sudo apt install -y python3-picamera2 python3-opencv python3-gpiozero python3-lgpio
+python3 -m venv --system-site-packages venv && source venv/bin/activate
+pip install torch torchvision ultralytics
+```
+
+`models/best.pt` is not in git (see `.gitignore`); copy it to the Pi with `scp`.
+
+```bash
+python crack_vision.py live --source picamera --smooth
+python crack_vision.py live --source picamera --smooth --ultrasonic --hfov 66
+```
+
+`--source picamera` reads the Pi Camera Module. `--smooth` runs detection in a
+background thread so the video stays fluid and boxes update when ready.
+`--ultrasonic` reads a trigger/echo sensor (default BCM pins `--trig 23
+--echo 24`, wiring in `docs/WIRING.md`), shows the wall distance on the video,
+and adds `distance_m`, `mm_per_pixel` and approximate `width_mm`/`height_mm`
+to each logged box. The sensor measures distance to the wall, not crack depth.
+Millimetre sizes assume the camera faces the wall squarely and `--hfov` is the
+camera's horizontal field of view in the medium. Pass `--sound-speed 1480` for
+a sensor operating in fresh water.
+
 ## Underwater validation required next
 
 Collect cracked and uncracked specimens in freshwater with the actual camera.

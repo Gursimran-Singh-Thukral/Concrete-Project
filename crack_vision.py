@@ -13,6 +13,8 @@ import shutil
 import threading
 import time
 
+from depth_sensor import AIR_SPEED, scale_boxes
+
 ROOT = Path(__file__).resolve().parent
 os.environ.setdefault("YOLO_CONFIG_DIR", str(ROOT / ".yolo"))
 DEFAULT_SOURCE = ROOT / "DATA_Maguire_20180517_ALL/DATA_Maguire_20180517_ALL/SDNET2018"
@@ -508,6 +510,10 @@ def live_command(args):
         if not capture.isOpened():
             raise ValueError(f"Cannot open camera/video: {args.source}")
     writer, frame_index = None, 0
+    sensor = None
+    if args.ultrasonic:
+        from depth_sensor import UltrasonicSensor
+        sensor = UltrasonicSensor(args.trig, args.echo, args.sound_speed, args.max_range)
     worker, logged = DetectionWorker(model, args, threshold) if args.smooth else None, 0
     log = None
     if args.output:
@@ -521,6 +527,7 @@ def live_command(args):
             if args.max_width and frame.shape[1] > args.max_width:
                 scale = args.max_width / frame.shape[1]
                 frame = cv2.resize(frame, (args.max_width, round(frame.shape[0] * scale)))
+            distance = sensor.read() if sensor else None
             if worker:
                 worker.submit(frame)
                 detections, metadata = worker.latest()
@@ -530,6 +537,8 @@ def live_command(args):
                 if metadata and detections != logged:
                     logged = detections
                     metadata = dict(metadata, frame=frame_index, video_time_ms=capture.get(cv2.CAP_PROP_POS_MSEC))
+                    if sensor:
+                        metadata = scale_boxes(metadata, distance, args.hfov)
                     if log:
                         log.write(json.dumps(metadata) + "\n")
             else:
@@ -538,8 +547,13 @@ def live_command(args):
                 metadata.update(frame=frame_index, processing_seconds=time.perf_counter() - tick,
                                 video_time_ms=capture.get(cv2.CAP_PROP_POS_MSEC),
                                 frame_width=frame.shape[1], frame_height=frame.shape[0])
+                if sensor:
+                    metadata = scale_boxes(metadata, distance, args.hfov)
                 if log:
                     log.write(json.dumps(metadata) + "\n")
+            if sensor:
+                label = f"Wall distance: {distance:.2f} m" if distance is not None else "Wall distance: out of range"
+                cv2.putText(annotated, label, (8, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.55, (0, 255, 0), 1)
             if args.output:
                 if writer is None:
                     fps = capture.get(cv2.CAP_PROP_FPS)
@@ -559,6 +573,8 @@ def live_command(args):
     finally:
         if worker:
             worker.stop()
+        if sensor:
+            sensor.close()
         capture.release()
         if writer:
             writer.release()
@@ -601,6 +617,16 @@ def main():
         if command == "live":
             p.add_argument("--max-width", type=int, default=640)
             p.add_argument("--no-display", action="store_true")
+            p.add_argument("--ultrasonic", action="store_true",
+                           help="Read wall distance from a trigger/echo ultrasonic sensor and add it to the overlay and log")
+            p.add_argument("--trig", type=int, default=23, help="BCM GPIO number wired to the sensor TRIG pin")
+            p.add_argument("--echo", type=int, default=24, help="BCM GPIO number wired to the sensor ECHO pin (via divider)")
+            p.add_argument("--sound-speed", type=float, default=AIR_SPEED,
+                           help="Speed of sound in the medium in m/s (343 for air, about 1480 for fresh water)")
+            p.add_argument("--max-range", type=float, default=2.0, help="Largest distance to report, in metres")
+            p.add_argument("--hfov", type=float, default=66.0,
+                           help="Horizontal field of view in the medium, in degrees, for converting pixels to mm "
+                                "(Camera Module 3: 66 in air; Module 2: 62.2)")
             p.add_argument("--smooth", action="store_true",
                            help="Detect in a background thread so the video stays fluid; boxes update when ready")
             p.add_argument("--max-frames", type=int, default=0)
